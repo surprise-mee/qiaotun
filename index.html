@@ -245,6 +245,9 @@ nav button.center.on{color:var(--ink)}
 </nav>
 <script>
 const IMG = JSON.parse(document.getElementById('imgdata').textContent);
+const IMG0 = Object.assign({}, IMG);
+function applyImg(m){const old={};Object.keys(IMG0).forEach(k=>{const v=(m&&m[k])||IMG0[k];if(IMG[k]!==v){old[IMG[k]]=v;IMG[k]=v}});return old}
+try{applyImg(JSON.parse(localStorage.getItem('qta_cfg')||'{}').img)}catch(e){}
 const BOOK = JSON.parse(document.getElementById('bookdata').textContent); // 個人版才有：書本動作圖
 var OVR={};try{OVR=JSON.parse(localStorage.getItem('qta_cfg')||'{}').ex||{}}catch(e){}
 const EXG=new Set(["altcurl", "antirot", "ballext", "bandabd", "bandpd", "bandpress", "bandpress2", "bandpu", "bandrow", "bbbench", "bbbor", "bbbridge", "bbhbox", "bbinc", "bbkrdl", "bbrdl", "bbthrust", "benchsq", "birddog", "boxsquat", "bwrdl", "bwrevlunge", "bwsplit", "bwsquat", "bwstep", "bwthrust", "cableabd", "cablerow", "clam", "convdl", "crunch", "csrow", "dbamdl", "dbbench", "dbbor", "dbdl", "dbfly", "dbhstep", "dbincline", "dbkrdl", "dbpress", "dbpushpress", "dbrdl", "dbrow", "dbsidebend", "dbslrdl", "dbsplit", "dbsq", "deflunge", "defsplit", "dip", "dlatpd", "farmer", "febridge", "feinv", "feslbridge", "frontraise", "fwdlunge", "gbridge", "goblet", "halfsq", "hbox", "hexdl", "hstep", "hyper45", "incfly", "inclinepu", "invrowk", "kbgoblet", "kbswing", "kickback", "kneeplank", "kneepu", "kneeside", "landmine", "latpd", "latraise", "lbox", "march", "nkpu", "pendquad", "plank", "ppt", "proreardelt", "proy", "pullthru", "pullupx", "pushup", "quadabd", "quadext", "rackpull", "reardelt", "revhypw", "revlunge", "rkc", "sadbbench", "sadbinc", "sadbpress", "sfethrust", "side45", "sidecrunch", "sidehip", "sidelying", "sideplank", "sl45", "slbridge", "slidecurl", "slpullthru", "slsitup", "slthrust", "spabd", "stagrdl", "stbandabd", "stdabd", "stdbpress", "steplunge", "stepup", "sumodl", "sumosq", "superman", "susrow", "tripush", "trow", "uhlatpd", "uprow", "w_foam", "w_lungetwist", "w_squatpry", "walklunge", "wglatpd", "xwalk"]); // 已生成的動作流程插圖（ex/<id>.webp、縮圖 ex/<id>_t.webp）
@@ -914,10 +917,27 @@ function cloudSum(){const cp=curPet();return{coach:S.settings.coach,t:titleInfo(
 let _push=null,_pushing=false;
 function cloudPush(now){if(!LIVE||!S.auth)return;clearTimeout(_push);_push=setTimeout(async()=>{if(!S.auth)return;if(_pushing)return cloudPush();_pushing=true;try{const j=await api('save',Object.assign(authBody(),{data:cloudData(),summary:cloudSum()}));if(!j.ok&&j.err)console.warn(j.err)}catch(e){}finally{_pushing=false}},now?0:2500)}
 // 動作圖設定（後台換圖／隱藏）
-async function loadCfg(){if(!LIVE)return;try{const j=await api('config');if(j.ok){const old=localStorage.getItem('qta_cfg');const nw=JSON.stringify({ex:j.ex,v:j.v});if(old!==nw){localStorage.setItem('qta_cfg',nw);OVR=j.ex||{};applyHide()}}}catch(e){}}
+async function loadCfg(){if(!LIVE)return;try{const j=await api('config');if(j.ok){const old=localStorage.getItem('qta_cfg');const nw=JSON.stringify({ex:j.ex,img:j.img||{},v:j.v});if(old!==nw){localStorage.setItem('qta_cfg',nw);OVR=j.ex||{};applyHide();const ch=applyImg(j.img||{});document.querySelectorAll('img').forEach(i=>{const a=i.getAttribute('src');if(ch[a])i.src=ch[a]})}}}catch(e){}}
 // Gemini 寵物：孵化或進化前，先請後台生成這一階段的圖
+// 打卡後在背景先畫好「下一個階段」，下次孵化／進化就不用等
+let _pre=null;
+function petPre(){
+ if(!LIVE||!S.auth)return;
+ const p=curPet();if(!p||(p.pid&&p.pid!=='g')||(p.g&&p.g.hidden))return;
+ const si=p.si||0;if(si<1)return;
+ const k=si===1?'baby':(PST[si+1]&&PST[si+1].k);if(!k)return;
+ if(p.g&&p.g.img&&p.g.img[k])return;
+ const par=p.parent&&petById(p.parent);
+ _pre=api('petgen',Object.assign(authBody(),{pet:{id:p.id,attr:p.attr,col:p.col,mut:p.mut?1:0,gen:p.gen||1,parentKey:par&&par.g?par.g.key:''},stages:[k]})).then(j=>{
+  const q=petById(p.id);if(!j.ok||!q)return;
+  q.g=q.g||{};q.g.key=j.key;if(j.t&&j.t.name)q.g.t=j.t;
+  if(j.hidden){q.g.hidden=1;q.g.img={}}else q.g.img=Object.assign(q.g.img||{},j.img||{});
+  save();(Object.values(q.g.img)).forEach(u=>{const i=new Image();i.src=u});
+ }).catch(()=>{}).finally(()=>{_pre=null});
+}
 async function petPrep(){
  if(!LIVE||!S.auth)return;
+ if(_pre){try{await _pre}catch(e){}}
  const p=curPet();if(!p||(p.pid&&p.pid!=='g'))return;
  const after=stIdx(p.e);if(after<2)return;
  if(p.g&&p.g.hidden)return;
@@ -1263,6 +1283,7 @@ function checkIn(){
   const pev=petCheck();s.checked=true;S.history.push({date:today(),day:plan.day,loc:s.loc,done:dead,total,xp,coach:s.coach,swaps:Object.keys(S.swaps).length,mus:sessionMus(plan.rows,s.ex)});S.dayPtr++;save();
   const stars=dead===total?3:dead>=total/2?2:1;
   petStage(pev,xp,stars,()=>tab('map'),s.warmDone?'':'今天沒暖身，能量只拿到 ×0.7，下次記得先去營地喔！');
+  petPre();
  };
  if(dead<total){const cp=curPet();sheet(`<div style="text-align:center">${cp?petPic(cp,null,'width:96px;height:96px;border-radius:20px;border:2px solid var(--line);object-fit:cover'):''}<h2 style="margin-top:8px">還有 ${total-dead} 個動作沒做</h2><p class="sub">沒關係，部分完成也算數，做到的 ⚡ 能量都會算進去。</p></div><div class="row"><button class="btn" style="flex:1" onclick="closeSheet()">再練一下</button><button class="btn main" style="flex:1" id="y">就收工吧</button></div>`,true);$('#y').onclick=go}else go();
 }

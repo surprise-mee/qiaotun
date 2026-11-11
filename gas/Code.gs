@@ -124,7 +124,7 @@ function clap_(name, r) {
 
 // ================= 前台設定（動作圖覆寫） =================
 function publicConfig_() {
-  return { ok: true, ex: json_(cfg_('EX'), {}), v: cfg_('EX_V') || '0' };
+  return { ok: true, ex: json_(cfg_('EX'), {}), img: json_(cfg_('IMG'), {}), v: (cfg_('EX_V') || '0') + '.' + (cfg_('IMG_V') || '0') };
 }
 
 // ================= Gemini 寵物 =================
@@ -194,10 +194,18 @@ function genText_(p, parent) {
  "look": "英文：這隻角色的外觀設定，給畫師用。寫出物種、主色（${col.color}）、眼睛、招牌特徵、體型，約 40 字",
  "stageLook": {"baby": "英文，幼年外觀與動作", "teen": "英文，青年外觀、運動配件與動作", "adult": "英文，壯年外觀、招牌配件與自信姿勢", "old": "英文，老年外觀（白鬍子或白眉、眼鏡等）"}
 }`;
-  const res = gemini_(cfg_('TEXT_MODEL') || DEF.TEXT_MODEL, {
-    contents: [{ parts: [{ text: prompt }] }],
-    generationConfig: { responseMimeType: 'application/json', temperature: 1.1 }
-  });
+  const model = cfg_('TEXT_MODEL') || DEF.TEXT_MODEL;
+  const gc = { responseMimeType: 'application/json', temperature: 1.1 };
+  // 少想一點、快一點：寫寵物設定不需要深度推理
+  if (/^gemini-[3-9]/.test(model)) gc.thinkingConfig = { thinkingLevel: 'low' };
+  else if (/^gemini-2\.5-flash/.test(model)) gc.thinkingConfig = { thinkingBudget: 0 };
+  let res;
+  try { res = gemini_(model, { contents: [{ parts: [{ text: prompt }] }], generationConfig: gc }); }
+  catch (e) {
+    if (!gc.thinkingConfig || !/400/.test(String(e.message))) throw e;
+    delete gc.thinkingConfig;
+    res = gemini_(model, { contents: [{ parts: [{ text: prompt }] }], generationConfig: gc });
+  }
   const txt = (((res.candidates || [])[0] || {}).content || {}).parts.map(x => x.text || '').join('');
   const t = JSON.parse(txt.replace(/^```json|```$/g, '').trim());
   ['story', 'lines'].forEach(k => { if (!Array.isArray(t[k])) t[k] = []; });
@@ -305,6 +313,7 @@ function urls_(img) {
 // ================= 管理後台（Admin.html 用 fetch 呼叫 doPost，a:'admin'） =================
 const ADMIN_FNS = { adminLogin: adminLogin, adminOverview: adminOverview, adminPets: adminPets, adminPetRegen: adminPetRegen, adminPetStatus: adminPetStatus,
   adminExGet: adminExGet, adminExUpload: adminExUpload, adminExSet: adminExSet, adminExReset: adminExReset,
+  adminImgGet: adminImgGet, adminImgUpload: adminImgUpload, adminImgReset: adminImgReset,
   adminSettings: adminSettings, adminSaveSettings: adminSaveSettings, adminTestKey: adminTestKey, adminResetPin: adminResetPin, adminDelete: adminDelete };
 function adminCall_(r) {
   const f = ADMIN_FNS[r.fn];
@@ -391,6 +400,27 @@ function adminExReset(tok, id) {
   setEx_(ex);
   return ex[id] || null;
 }
+// ---- 固定素材（封面、教練、蛋、預設寵物、伸展圖…）----
+function adminImgGet(tok) { adm_(tok); return { img: json_(cfg_('IMG'), {}), files: json_(cfg_('IMG_F'), {}), site: cfg_('SITE_URL') || '' }; }
+function adminImgUpload(tok, key, b64, mime) {
+  adm_(tok);
+  if (!/^[a-z0-9_]+$/i.test(key)) throw new Error('素材名稱不對');
+  const img = json_(cfg_('IMG'), {}), files = json_(cfg_('IMG_F'), {});
+  if (files[key]) { try { DriveApp.getFileById(files[key]).setTrashed(true); } catch (e) {} }
+  const f = folder_('assets').createFile(Utilities.newBlob(Utilities.base64Decode(b64), mime || 'image/png', key + '_' + Date.now()));
+  f.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  files[key] = f.getId(); img[key] = 'https://lh3.googleusercontent.com/d/' + f.getId();
+  setCfg_('IMG', JSON.stringify(img)); setCfg_('IMG_F', JSON.stringify(files)); setCfg_('IMG_V', String(Date.now()));
+  return img[key];
+}
+function adminImgReset(tok, key) {
+  adm_(tok);
+  const img = json_(cfg_('IMG'), {}), files = json_(cfg_('IMG_F'), {});
+  if (files[key]) { try { DriveApp.getFileById(files[key]).setTrashed(true); } catch (e) {} }
+  delete img[key]; delete files[key];
+  setCfg_('IMG', JSON.stringify(img)); setCfg_('IMG_F', JSON.stringify(files)); setCfg_('IMG_V', String(Date.now()));
+  return true;
+}
 function setEx_(ex) { setCfg_('EX', JSON.stringify(ex)); setCfg_('EX_V', String(Date.now())); }
 
 function adminSettings(tok) {
@@ -468,7 +498,7 @@ function folder_(sub) {
 /** 第一次部署前可以在編輯器執行一次：建立所有工作表並要求授權（試算表、雲端硬碟、外部連線） */
 function setup() {
   Object.keys(SH).forEach(k => sheet_(SH[k]));
-  folder_('pets'); folder_('exercises');
+  folder_('pets'); folder_('exercises'); folder_('assets');
   UrlFetchApp.fetch('https://www.google.com', { muteHttpExceptions: true });
   Logger.log('完成！工作表與「翹臀冒險素材」資料夾都建好了。');
 }
