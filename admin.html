@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<style>
+:root{--ink:#3A3833;--bg:#FBF5E9;--card:#FFFDF8;--butter:#FAC775;--mint:#5DCAA5;--coral:#F0997B;--lav:#C9C3F2;--sub:#7A776E;--line:#E6DCC6}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,"Noto Sans TC",sans-serif;font-size:15px}
+header{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:2px solid var(--ink);background:var(--card);position:sticky;top:0;z-index:5}
+header b{font-size:18px}header .sp{flex:1}
+nav{display:flex;gap:6px;padding:10px 16px;overflow-x:auto;border-bottom:1px dashed var(--line);background:var(--bg);position:sticky;top:55px;z-index:4}
+nav button{white-space:nowrap}
+nav button.on{background:var(--butter)}
+.w{max-width:1000px;margin:0 auto;padding:16px}
+h2{font-size:19px;margin:6px 0 12px}
+.card{background:var(--card);border:2px solid var(--ink);border-radius:16px;padding:14px;margin:12px 0;box-shadow:0 3px 0 var(--ink)}
+input,select{font:inherit;padding:9px 11px;border:2px solid var(--ink);border-radius:12px;background:#fff;min-width:0}
+button{font:inherit;font-weight:800;padding:8px 13px;border:2px solid var(--ink);border-radius:12px;background:#fff;cursor:pointer;box-shadow:0 2px 0 var(--ink)}
+button.y{background:var(--butter)}button.m{background:var(--mint)}button.r{background:var(--coral)}button.s{padding:4px 9px;font-size:12px;box-shadow:0 1px 0 var(--ink)}
+button:disabled{opacity:.45;cursor:default}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sub{color:var(--sub);font-size:13px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.stat{background:#fff;border:2px solid var(--ink);border-radius:14px;padding:10px;text-align:center}
+.stat b{display:block;font-size:24px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:8px 6px;border-bottom:1px dashed var(--line);text-align:left;vertical-align:middle}
+th{font-size:12px;color:var(--sub);font-weight:700;cursor:pointer;white-space:nowrap}
+td.n{font-weight:800}
+.tw{overflow-x:auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.pet{background:#fff;border:2px solid var(--ink);border-radius:16px;padding:10px}
+.pet.off{opacity:.5}
+.st4{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:8px 0}
+.st4 div{text-align:center;font-size:11px;color:var(--sub)}
+.st4 img,.st4 .ph{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;border:1.5px solid var(--line);background:#F8F0E3;display:block;cursor:pointer}
+.st4 .ph{display:flex;align-items:center;justify-content:center;font-size:18px;cursor:default}
+.tag{display:inline-block;font-size:11px;font-weight:800;padding:2px 8px;border-radius:99px;border:1.5px solid var(--ink);margin:2px 3px 0 0}
+.ex{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.exc{background:#fff;border:2px solid var(--ink);border-radius:14px;padding:8px}
+.exc.hid{opacity:.5;background:#eee}
+.exc img{width:100%;aspect-ratio:1;object-fit:contain;background:#F7EFE6;border-radius:10px;display:block}
+.exc b{display:block;font-size:13px;margin:6px 0 2px;line-height:1.3}
+.pill{font-size:11px;padding:1px 7px;border-radius:99px;background:var(--lav);font-weight:800}
+.pill.new{background:var(--mint)}
+#msg{position:fixed;left:50%;top:70px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;display:none;max-width:90%;z-index:99}
+#big{position:fixed;inset:0;background:#000b;display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+#big img{max-width:100%;max-height:90vh;border-radius:16px;background:#fff}
+.bar{display:flex;align-items:flex-end;gap:6px;height:150px;padding-top:10px}
+.bar div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;font-size:11px;color:var(--sub)}
+.bar i{display:block;width:100%;background:var(--butter);border:1.5px solid var(--ink);border-radius:6px 6px 0 0}
+.bar em{font-style:normal;font-weight:800;color:var(--ink)}
+.quota{height:14px;border:2px solid var(--ink);border-radius:99px;overflow:hidden;background:#fff}
+.quota i{display:block;height:100%;background:var(--mint)}
+label.f{display:block;margin:10px 0 4px;font-weight:800;font-size:14px}
+</style>
+</head>
+<body>
+<header><span style="font-size:24px">🍑</span><b>翹臀冒險・管理後台</b><span class="sp"></span><button class="s" id="logout" style="display:none">登出</button></header>
+
+<div class="w" id="login">
+  <div class="card" style="max-width:420px;margin:40px auto">
+    <h2 style="margin-top:0">🔐 管理員登入</h2>
+    <p class="sub">輸入你在「指令碼屬性」設定的 ADMIN_PASS。</p>
+    <div class="row"><input id="pass" type="password" placeholder="管理密碼" style="flex:1"><button class="y" id="go">進入</button></div>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+  <nav id="nav">
+    <button data-t="ov" class="on">📊 數據總覽</button>
+    <button data-t="pets">🐾 寵物圖鑑</button>
+    <button data-t="ex">🏋️ 動作圖</button>
+    <button data-t="set">⚙️ 設定</button>
+  </nav>
+  <div class="w" id="main"></div>
+</div>
+<div id="big" onclick="this.style.display='none'"><img id="bigimg"></div>
+<div id="msg"></div>
+
+<script>
+const EXLIST = [{"id": "w_foam", "n": "暖身：滾筒放鬆", "cat": "暖身", "hid": false}, {"id": "w_lungetwist", "n": "暖身：弓步扭轉", "cat": "暖身", "hid": false}, {"id": "w_squatpry", "n": "暖身：深蹲撐開", "cat": "暖身", "hid": false}, {"id": "gbridge", "n": "徒手臀橋", "cat": "臀肌主導", "hid": false}, {"id": "bwthrust", "n": "徒手臀舉", "cat": "臀肌主導", "hid": false}, {"id": "slthrust", "n": "抬肩單腳臀舉", "cat": "臀肌主導", "hid": false}, {"id": "bbbridge", "n": "槓鈴臀橋", "cat": "臀肌主導", "hid": false}, {"id": "bbthrust", "n": "槓鈴臀舉", "cat": "臀肌主導", "hid": false}, {"id": "boxsquat", "n": "徒手箱上深蹲", "cat": "股四頭肌主導", "hid": false}, {"id": "bwsquat", "n": "徒手深蹲", "cat": "股四頭肌主導", "hid": false}, {"id": "goblet", "n": "啞鈴高腳杯深蹲", "cat": "股四頭肌主導", "hid": false}, {"id": "revlunge", "n": "啞鈴後跨步蹲", "cat": "股四頭肌主導", "hid": false}, {"id": "bwsplit", "n": "徒手保加利亞分腿蹲", "cat": "股四頭肌主導", "hid": false}, {"id": "stepup", "n": "啞鈴登階", "cat": "股四頭肌主導", "hid": false}, {"id": "bwrdl", "n": "伸手單腳羅馬尼亞硬舉", "cat": "髖關節主導", "hid": false}, {"id": "dbrdl", "n": "啞鈴羅馬尼亞硬舉", "cat": "髖關節主導", "hid": false}, {"id": "rackpull", "n": "架上拉", "cat": "髖關節主導", "hid": false}, {"id": "bbrdl", "n": "槓鈴羅馬尼亞硬舉", "cat": "髖關節主導", "hid": false}, {"id": "ballext", "n": "抗力球背部伸展", "cat": "直腿髖伸", "hid": false}, {"id": "hyper45", "n": "45 度髖超伸", "cat": "直腿髖伸", "hid": false}, {"id": "kbswing", "n": "俄式盪壺", "cat": "髖關節主導", "hid": false}, {"id": "invrowk", "n": "改良式反向划船", "cat": "水平拉", "hid": false}, {"id": "bandrow", "n": "彈力帶划船", "cat": "水平拉", "hid": false}, {"id": "dbrow", "n": "單臂啞鈴划船", "cat": "水平拉", "hid": false}, {"id": "cablerow", "n": "坐姿滑輪划船", "cat": "水平拉", "hid": false}, {"id": "csrow", "n": "胸部支撐啞鈴划船", "cat": "水平拉", "hid": false}, {"id": "bandpd", "n": "彈力帶下拉", "cat": "垂直拉", "hid": false}, {"id": "latpd", "n": "滑輪下拉", "cat": "垂直拉", "hid": false}, {"id": "bandpu", "n": "彈力帶輔助引體向上", "cat": "垂直拉", "hid": false}, {"id": "inclinepu", "n": "身體抬高式伏地挺身", "cat": "水平推", "hid": false}, {"id": "kneepu", "n": "膝式伏地挺身", "cat": "水平推", "hid": false}, {"id": "pushup", "n": "伏地挺身", "cat": "水平推", "hid": false}, {"id": "dbbench", "n": "啞鈴臥推", "cat": "水平推", "hid": false}, {"id": "dbincline", "n": "啞鈴上斜臥推", "cat": "水平推", "hid": false}, {"id": "pikepu", "n": "肩式伏地挺身", "cat": "垂直推", "hid": true}, {"id": "dbpress", "n": "坐姿啞鈴肩推", "cat": "垂直推", "hid": false}, {"id": "bandpress", "n": "彈力帶肩推", "cat": "垂直推", "hid": false}, {"id": "sidelying", "n": "側姿髖外展", "cat": "臀部輔助", "hid": false}, {"id": "clam", "n": "側姿蛤蜊式", "cat": "臀部輔助", "hid": false}, {"id": "bandabd", "n": "坐姿彈力帶髖外展", "cat": "臀部輔助", "hid": false}, {"id": "xwalk", "n": "X 形彈力帶側走", "cat": "臀部輔助", "hid": false}, {"id": "kneeplank", "n": "膝上棒式", "cat": "線性核心", "hid": false}, {"id": "plank", "n": "棒式", "cat": "線性核心", "hid": false}, {"id": "rkc", "n": "俄式平板撐體", "cat": "線性核心", "hid": false}, {"id": "crunch", "n": "捲腹", "cat": "線性核心", "hid": false}, {"id": "kneeside", "n": "膝式側平板撐體", "cat": "側向／旋轉核心", "hid": false}, {"id": "sideplank", "n": "側平板撐體", "cat": "側向／旋轉核心", "hid": false}, {"id": "antirot", "n": "彈力帶抗旋轉", "cat": "側向／旋轉核心", "hid": false}, {"id": "birddog", "n": "鳥狗式", "cat": "啟動運動", "hid": false}, {"id": "hydrant", "n": "消防栓式側抬腿", "cat": "啟動運動", "hid": true}, {"id": "quadext", "n": "四足跪姿髖伸", "cat": "啟動運動", "hid": false}, {"id": "serratus", "n": "前鋸肌挺身", "cat": "啟動運動", "hid": true}, {"id": "superman", "n": "超人式", "cat": "啟動運動", "hid": false}, {"id": "ppt", "n": "仰臥骨盆後傾", "cat": "啟動運動", "hid": false}, {"id": "febridge", "n": "抬腳式臀橋", "cat": "臀肌主導", "hid": false}, {"id": "sfethrust", "n": "抬肩及抬腳式臀舉", "cat": "臀肌主導", "hid": false}, {"id": "feslbridge", "n": "抬腳式單腿臀橋", "cat": "臀肌主導", "hid": false}, {"id": "slbridge", "n": "單腳臀橋", "cat": "臀肌主導", "hid": false}, {"id": "march", "n": "抬肩式臀部行軍", "cat": "臀肌主導", "hid": false}, {"id": "sfeslthrust", "n": "抬肩及抬腳式單腳臀舉", "cat": "臀肌主導", "hid": true}, {"id": "amthrust", "n": "美式臀舉", "cat": "臀肌主導", "hid": true}, {"id": "pendquad", "n": "鐘擺機四足髖伸", "cat": "臀肌主導", "hid": false}, {"id": "cableabd", "n": "站姿滑輪髖外展", "cat": "臀部輔助", "hid": false}, {"id": "quadabd", "n": "雙側四足髖外展", "cat": "臀部輔助", "hid": false}, {"id": "sidehip", "n": "側姿抬髖", "cat": "臀部輔助", "hid": false}, {"id": "stdabd", "n": "站姿雙側髖外展", "cat": "臀部輔助", "hid": false}, {"id": "stbandabd", "n": "站姿彈力帶髖外展", "cat": "臀部輔助", "hid": false}, {"id": "cablerot", "n": "滑輪髖旋轉", "cat": "臀部輔助", "hid": true}, {"id": "hbox", "n": "徒手高位箱上深蹲", "cat": "股四頭肌主導", "hid": false}, {"id": "lbox", "n": "徒手低位箱上深蹲", "cat": "股四頭肌主導", "hid": false}, {"id": "kbgoblet", "n": "壺鈴高腳杯深蹲", "cat": "股四頭肌主導", "hid": false}, {"id": "benchsq", "n": "啞鈴椅間深蹲", "cat": "股四頭肌主導", "hid": false}, {"id": "dbsq", "n": "啞鈴全蹲", "cat": "股四頭肌主導", "hid": false}, {"id": "bbhbox", "n": "槓鈴高位箱上深蹲", "cat": "股四頭肌主導", "hid": false}, {"id": "bblbox", "n": "槓鈴低位箱上深蹲", "cat": "股四頭肌主導", "hid": true}, {"id": "halfsq", "n": "槓鈴半深蹲", "cat": "股四頭肌主導", "hid": false}, {"id": "parsq", "n": "槓鈴平行蹲", "cat": "股四頭肌主導", "hid": true}, {"id": "sumosq", "n": "槓鈴相撲深蹲", "cat": "股四頭肌主導", "hid": false}, {"id": "fullsq", "n": "槓鈴全蹲", "cat": "股四頭肌主導", "hid": true}, {"id": "frontsq", "n": "槓鈴前蹲舉", "cat": "股四頭肌主導", "hid": true}, {"id": "zercher", "n": "澤奇深蹲", "cat": "股四頭肌主導", "hid": true}, {"id": "fwdlunge", "n": "徒手前跨步蹲", "cat": "股四頭肌主導", "hid": false}, {"id": "bwrevlunge", "n": "徒手後跨步蹲", "cat": "股四頭肌主導", "hid": false}, {"id": "walklunge", "n": "啞鈴行走跨步蹲", "cat": "股四頭肌主導", "hid": false}, {"id": "bbrevlunge", "n": "槓鈴反向跨步蹲", "cat": "股四頭肌主導", "hid": true}, {"id": "deflunge", "n": "啞鈴赤字後跨步蹲", "cat": "股四頭肌主導", "hid": false}, {"id": "defsplit", "n": "徒手保加利亞赤字分腿蹲", "cat": "股四頭肌主導", "hid": false}, {"id": "dbsplit", "n": "啞鈴保加利亞分腿蹲", "cat": "股四頭肌主導", "hid": false}, {"id": "bbsplit", "n": "槓鈴保加利亞分腿蹲", "cat": "股四頭肌主導", "hid": true}, {"id": "bwstep", "n": "徒手登階", "cat": "股四頭肌主導", "hid": false}, {"id": "zstep", "n": "澤奇登階", "cat": "股四頭肌主導", "hid": true}, {"id": "bbstep", "n": "槓鈴登階", "cat": "股四頭肌主導", "hid": true}, {"id": "steplunge", "n": "登階／後跨步蹲複合動作", "cat": "股四頭肌主導", "hid": false}, {"id": "hstep", "n": "徒手高登階", "cat": "股四頭肌主導", "hid": false}, {"id": "dbhstep", "n": "啞鈴高登階", "cat": "股四頭肌主導", "hid": false}, {"id": "slbox", "n": "單腳箱上深蹲", "cat": "股四頭肌主導", "hid": true}, {"id": "skater", "n": "滑冰者深蹲", "cat": "股四頭肌主導", "hid": true}, {"id": "pistol", "n": "槍式深蹲", "cat": "股四頭肌主導", "hid": true}, {"id": "pullthru", "n": "屈膝前拉髖伸", "cat": "髖關節主導", "hid": false}, {"id": "stagrdl", "n": "啞鈴跨步羅馬尼亞硬舉", "cat": "髖關節主導", "hid": false}, {"id": "dbkrdl", "n": "啞鈴單腳外展羅馬尼亞硬舉", "cat": "髖關節主導", "hid": false}, {"id": "dbslrdl", "n": "啞鈴單腳羅馬尼亞硬舉", "cat": "髖關節主導", "hid": false}, {"id": "dbamdl", "n": "啞鈴美式硬舉", "cat": "髖關節主導", "hid": false}, {"id": "bbamdl", "n": "槓鈴美式硬舉", "cat": "髖關節主導", "hid": true}, {"id": "dbdl", "n": "啞鈴硬舉", "cat": "髖關節主導", "hid": false}, {"id": "hexdl", "n": "六角槓硬舉", "cat": "髖關節主導", "hid": false}, {"id": "convdl", "n": "傳統硬舉", "cat": "髖關節主導", "hid": false}, {"id": "sumodl", "n": "相撲硬舉", "cat": "髖關節主導", "hid": false}, {"id": "boxdefdl", "n": "箱上赤字硬舉", "cat": "髖關節主導", "hid": true}, {"id": "platedefdl", "n": "槓片上赤字硬舉", "cat": "髖關節主導", "hid": true}, {"id": "bbkrdl", "n": "槓鈴單腳外展羅馬尼亞硬舉", "cat": "髖關節主導", "hid": false}, {"id": "bbslrdl", "n": "槓鈴單腳羅馬尼亞硬舉", "cat": "髖關節主導", "hid": true}, {"id": "goodam", "n": "槓鈴早安運動", "cat": "髖關節主導", "hid": true}, {"id": "amswing", "n": "美式盪壺", "cat": "髖關節主導", "hid": true}, {"id": "kickback", "n": "滑輪後踢", "cat": "直腿髖伸", "hid": false}, {"id": "slpullthru", "n": "直腿前拉髖伸", "cat": "直腿髖伸", "hid": false}, {"id": "ballrev", "n": "抗力球俯臥髖超伸", "cat": "直腿髖伸", "hid": true}, {"id": "pris45", "n": "囚徒式45度髖超伸", "cat": "直腿髖伸", "hid": true}, {"id": "sl45", "n": "單腳45度髖超伸", "cat": "直腿髖伸", "hid": false}, {"id": "slpris45", "n": "單腳囚徒式45度髖超伸", "cat": "直腿髖伸", "hid": true}, {"id": "db45", "n": "啞鈴45度髖超伸", "cat": "直腿髖伸", "hid": true}, {"id": "band45", "n": "彈力帶45度髖超伸", "cat": "直腿髖伸", "hid": true}, {"id": "backext", "n": "背部伸展", "cat": "直腿髖伸", "hid": true}, {"id": "prisext", "n": "囚徒式背伸展", "cat": "直腿髖伸", "hid": true}, {"id": "slext", "n": "單腳背伸展", "cat": "直腿髖伸", "hid": true}, {"id": "slprisext", "n": "單腳囚徒式背伸展", "cat": "直腿髖伸", "hid": true}, {"id": "dbext", "n": "啞鈴背伸展", "cat": "直腿髖伸", "hid": true}, {"id": "bandext", "n": "彈力帶背伸展", "cat": "直腿髖伸", "hid": true}, {"id": "revhyp", "n": "擺鐘機器徒手俯臥髖伸", "cat": "直腿髖伸", "hid": true}, {"id": "revhypw", "n": "鐘擺機負重俯臥髖伸", "cat": "直腿髖伸", "hid": false}, {"id": "slrevhyp", "n": "單腳負重俯臥髖伸", "cat": "直腿髖伸", "hid": true}, {"id": "sldl", "n": "直腿硬舉", "cat": "直腿髖伸", "hid": true}, {"id": "ballcurl", "n": "抗力球腿後勾", "cat": "腿後肌群", "hid": true}, {"id": "slidecurl", "n": "滑盤腿後勾", "cat": "腿後肌群", "hid": false}, {"id": "invcurl", "n": "架下腿後勾", "cat": "腿後肌群", "hid": true}, {"id": "ghr", "n": "臀腿升體", "cat": "腿後肌群", "hid": true}, {"id": "dbghr", "n": "啞鈴臀腿升體", "cat": "腿後肌群", "hid": true}, {"id": "bandghr", "n": "彈力帶臀腿升體", "cat": "腿後肌群", "hid": true}, {"id": "feghr", "n": "抬腳式臀腿升體", "cat": "腿後肌群", "hid": true}, {"id": "nordic", "n": "俄式腿後勾", "cat": "腿後肌群", "hid": true}, {"id": "susrow", "n": "懸吊裝置反向划船", "cat": "水平拉", "hid": false}, {"id": "fesusrow", "n": "抬腳式懸吊裝置反向划船", "cat": "水平拉", "hid": true}, {"id": "bbinvk", "n": "改良式槓鈴反向划船", "cat": "水平拉", "hid": true}, {"id": "bbinv", "n": "槓鈴反向划船", "cat": "水平拉", "hid": true}, {"id": "feinv", "n": "抬腳式反向划船", "cat": "水平拉", "hid": false}, {"id": "dbbor", "n": "啞鈴屈體划船", "cat": "水平拉", "hid": false}, {"id": "cable1row", "n": "站姿單臂滑輪划船", "cat": "水平拉", "hid": true}, {"id": "facepull", "n": "坐姿向臉拉", "cat": "水平拉", "hid": true}, {"id": "trow", "n": "T字划船", "cat": "水平拉", "hid": false}, {"id": "bbbor", "n": "槓鈴屈體划船", "cat": "水平拉", "hid": false}, {"id": "nkpu", "n": "窄距膝式伏地挺身", "cat": "水平推", "hid": false}, {"id": "npu", "n": "窄距伏地挺身", "cat": "水平推", "hid": true}, {"id": "fepu", "n": "抬腳式伏地挺身", "cat": "水平推", "hid": true}, {"id": "bandpress2", "n": "彈力帶胸推", "cat": "水平推", "hid": false}, {"id": "sadbbench", "n": "單手啞鈴臥推", "cat": "水平推", "hid": false}, {"id": "sadbinc", "n": "單手啞鈴上斜臥推", "cat": "水平推", "hid": false}, {"id": "floorpress", "n": "槓鈴地板臥推", "cat": "水平推", "hid": true}, {"id": "bbbench", "n": "槓鈴臥推", "cat": "水平推", "hid": false}, {"id": "cgbench", "n": "槓鈴窄握臥推", "cat": "水平推", "hid": true}, {"id": "bbinc", "n": "槓鈴上斜臥推", "cat": "水平推", "hid": false}, {"id": "wglatpd", "n": "寬握滑輪下拉", "cat": "垂直拉", "hid": false}, {"id": "uhlatpd", "n": "反手滑輪下拉", "cat": "垂直拉", "hid": false}, {"id": "dlatpd", "n": "D形握把滑輪下拉", "cat": "垂直拉", "hid": false}, {"id": "chinup", "n": "反握引體向上", "cat": "垂直拉", "hid": true}, {"id": "nchin", "n": "窄距反握引體向上", "cat": "垂直拉", "hid": true}, {"id": "wchin", "n": "寬距反握引體向上", "cat": "垂直拉", "hid": true}, {"id": "neutpu", "n": "平行握法引體向上", "cat": "垂直拉", "hid": true}, {"id": "nneutpu", "n": "窄距平行握法引體向上", "cat": "垂直拉", "hid": true}, {"id": "wneutpu", "n": "寬距平行握法引體向上", "cat": "垂直拉", "hid": true}, {"id": "pullupx", "n": "引體向上", "cat": "垂直拉", "hid": false}, {"id": "wpullup", "n": "寬握引體向上", "cat": "垂直拉", "hid": true}, {"id": "beltpu", "n": "腰帶負重平行握法引體向上", "cat": "垂直拉", "hid": true}, {"id": "dbpu", "n": "啞鈴負重平行握法引體向上", "cat": "垂直拉", "hid": true}, {"id": "bbpushpress", "n": "槓鈴借力推舉", "cat": "垂直推", "hid": true}, {"id": "dbpushpress", "n": "啞鈴借力推舉", "cat": "垂直推", "hid": false}, {"id": "stdbpress", "n": "站姿啞鈴過頭推舉", "cat": "垂直推", "hid": false}, {"id": "sadbpress", "n": "單手啞鈴肩推", "cat": "垂直推", "hid": false}, {"id": "milpress", "n": "軍式推舉", "cat": "垂直推", "hid": true}, {"id": "dip", "n": "雙槓撐體", "cat": "垂直推", "hid": false}, {"id": "wdip", "n": "負重雙槓撐體", "cat": "垂直推", "hid": true}, {"id": "ballcrunch", "n": "抗力球捲腹", "cat": "線性核心", "hid": true}, {"id": "dbballcrunch", "n": "啞鈴抗力球捲腹", "cat": "線性核心", "hid": true}, {"id": "slsitup", "n": "直腿仰臥起坐", "cat": "線性核心", "hid": false}, {"id": "longplank", "n": "長抗力臂棒式", "cat": "線性核心", "hid": true}, {"id": "ferkc", "n": "抬腳俄式平板撐體", "cat": "線性核心", "hid": true}, {"id": "bodysaw", "n": "人體鋸子", "cat": "線性核心", "hid": true}, {"id": "abwheel", "n": "健腹滾輪", "cat": "線性核心", "hid": true}, {"id": "hangleg", "n": "懸吊抬腿", "cat": "線性核心", "hid": true}, {"id": "farmer", "n": "壺鈴負重農夫走路", "cat": "線性核心", "hid": false}, {"id": "tgubw", "n": "無負重土耳其起立", "cat": "線性核心", "hid": true}, {"id": "tgu", "n": "土耳其起立", "cat": "線性核心", "hid": true}, {"id": "sidecrunch", "n": "側捲腹", "cat": "側向／旋轉核心", "hid": false}, {"id": "ballside", "n": "抗力球側捲腹", "cat": "側向／旋轉核心", "hid": true}, {"id": "dbsidebend", "n": "啞鈴側彎", "cat": "側向／旋轉核心", "hid": false}, {"id": "side45", "n": "45度側彎", "cat": "側向／旋轉核心", "hid": false}, {"id": "landmine", "n": "地雷管扭身", "cat": "側向／旋轉核心", "hid": false}, {"id": "spabd", "n": "側平板撐體加髖外展", "cat": "側向／旋轉核心", "hid": false}, {"id": "fespabd", "n": "抬腳式側平板撐體加髖外展", "cat": "側向／旋轉核心", "hid": true}, {"id": "fespclam", "n": "抬腳式側平板撐體蛤蜊式", "cat": "側向／旋轉核心", "hid": true}, {"id": "ropelift", "n": "轉身舉繩", "cat": "側向／旋轉核心", "hid": true}, {"id": "ropehchop", "n": "繩索水平伐木", "cat": "側向／旋轉核心", "hid": true}, {"id": "ropechop", "n": "繩索伐木", "cat": "側向／旋轉核心", "hid": true}, {"id": "ropekchop", "n": "繩索高跪姿水平伐木", "cat": "側向／旋轉核心", "hid": true}, {"id": "cookkchop", "n": "庫克槓高跪姿水平伐木", "cat": "側向／旋轉核心", "hid": true}, {"id": "cookhchop", "n": "庫克槓水平伐木", "cat": "側向／旋轉核心", "hid": true}, {"id": "balladd", "n": "抗力球髖內收", "cat": "孤立動作", "hid": true}, {"id": "cableadd", "n": "站姿滑輪髖內收", "cat": "孤立動作", "hid": true}, {"id": "cableflex", "n": "滑輪髖屈曲", "cat": "孤立動作", "hid": true}, {"id": "bandflex", "n": "躺姿彈力帶髖屈曲", "cat": "孤立動作", "hid": true}, {"id": "bandcurl", "n": "坐姿彈力帶腿彎舉", "cat": "孤立動作", "hid": true}, {"id": "calfraise", "n": "單腿提踵", "cat": "孤立動作", "hid": true}, {"id": "latraise", "n": "啞鈴側平舉", "cat": "孤立動作", "hid": false}, {"id": "frontraise", "n": "啞鈴前平舉", "cat": "孤立動作", "hid": false}, {"id": "reardelt", "n": "啞鈴後三角肌平舉", "cat": "孤立動作", "hid": false}, {"id": "uprow", "n": "啞鈴直立划船", "cat": "孤立動作", "hid": false}, {"id": "shrug", "n": "啞鈴聳肩", "cat": "孤立動作", "hid": true}, {"id": "proreardelt", "n": "俯臥後三角平舉", "cat": "孤立動作", "hid": false}, {"id": "proy", "n": "俯臥斜方後舉", "cat": "孤立動作", "hid": false}, {"id": "prowrow", "n": "俯臥開肘划船", "cat": "孤立動作", "hid": true}, {"id": "proshrug", "n": "俯臥聳肩", "cat": "孤立動作", "hid": true}, {"id": "scarecrow", "n": "稻草人式", "cat": "孤立動作", "hid": true}, {"id": "cablerdelt", "n": "俯身滑輪後三角平舉", "cat": "孤立動作", "hid": true}, {"id": "straightpd", "n": "直臂滑輪下拉", "cat": "孤立動作", "hid": true}, {"id": "dbfly", "n": "啞鈴飛鳥", "cat": "孤立動作", "hid": false}, {"id": "incfly", "n": "啞鈴上斜飛鳥", "cat": "孤立動作", "hid": false}, {"id": "pullover", "n": "啞鈴仰臥拉舉", "cat": "孤立動作", "hid": true}, {"id": "tripush", "n": "滑輪三頭肌下壓", "cat": "孤立動作", "hid": false}, {"id": "ropepush", "n": "繩索三頭肌下壓", "cat": "孤立動作", "hid": true}, {"id": "ohtri", "n": "滑輪三頭肌過頭伸展", "cat": "孤立動作", "hid": true}, {"id": "inccurl", "n": "啞鈴上斜彎舉", "cat": "孤立動作", "hid": true}, {"id": "altcurl", "n": "啞鈴交替彎舉", "cat": "孤立動作", "hid": false}, {"id": "hammer", "n": "啞鈴垂式彎舉", "cat": "孤立動作", "hid": true}, {"id": "conccurl", "n": "啞鈴集中彎舉", "cat": "孤立動作", "hid": true}, {"id": "bbcurl", "n": "槓鈴二頭彎舉", "cat": "孤立動作", "hid": true}];
+const ATTR = {red:['力量系','#F0997B'],mint:['柔軟系','#7FD3B6'],butter:['耐力系','#F5CF77'],peach:['翹臀系','#F7B3A6']};
+const STN = {baby:'幼年',teen:'青年',adult:'壯年',old:'老年'};
+const SS = {get(k){try{return sessionStorage.getItem(k)}catch(e){return null}},set(k,v){try{sessionStorage.setItem(k,v)}catch(e){}},del(k){try{sessionStorage.removeItem(k)}catch(e){}}};
+let TOK = SS.get('qta_adm') || '', TAB = 'ov', SITE = '';
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function toast(t){const m=$('#msg');m.textContent=t;m.style.display='block';clearTimeout(m._t);m._t=setTimeout(()=>m.style.display='none',3000)}
+const API = "https://script.google.com/macros/s/AKfycbyU2xukAW94ltDwxCchZQ9-YY5vF2B0ufNONRHWC_g4OIN_8ZO21mZW0zAojRSmLCAZ/exec";
+async function run(fn, ...a){
+  let j;
+  try {
+    const r = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ a: 'admin', fn: fn, args: a }) });
+    j = await r.json();
+  } catch (e) { toast('連不上後台，請確認網路或 Apps Script 部署'); throw e; }
+  if (j.ok) return j.v;
+  const msg = j.err || '發生錯誤';
+  toast(/未知的/.test(msg) ? '後台還是舊版：請把 Code.gs 換成最新版，並重新部署成「新版本」' : msg);
+  if (/重新登入/.test(msg)) { TOK=''; SS.del('qta_adm'); show(false); }
+  throw new Error(msg);
+}
+const api = (fn, ...a) => run(fn, TOK, ...a);
+function show(on){$('#login').style.display=on?'none':'block';$('#app').style.display=on?'block':'none';$('#logout').style.display=on?'inline-block':'none'}
+function zoom(src){$('#bigimg').src=src;$('#big').style.display='flex'}
+
+$('#go').onclick = async () => {
+  const p = $('#pass').value; if (!p) return toast('請輸入密碼');
+  const b = $('#go'); b.disabled = true; b.textContent = '登入中…';
+  try { TOK = await run('adminLogin', p); } finally { b.disabled = false; b.textContent = '進入'; } SS.set('qta_adm', TOK); show(true); tab('ov');
+};
+$('#pass').onkeydown = e => { if (e.key === 'Enter') $('#go').click(); };
+$('#logout').onclick = () => { TOK=''; SS.del('qta_adm'); show(false); };
+document.querySelectorAll('#nav button').forEach(b => b.onclick = () => tab(b.dataset.t));
+function tab(t){TAB=t;document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));$('#main').innerHTML='<p class="sub">讀取中…</p>';({ov,pets,ex,set})[t]().catch(()=>{})}
+
+// ================= 數據總覽 =================
+let OV = null, SORT = 'week';
+async function ov(){
+  OV = await api('adminOverview');
+  drawOv();
+}
+function drawOv(){
+  const L = OV.list.slice().sort((a,b)=> SORT==='name'?a.name.localeCompare(b.name):(b[SORT]||0)>(a[SORT]||0)?1:(b[SORT]||0)<(a[SORT]||0)?-1:0);
+  const mx = Math.max(1, ...OV.trend.map(t=>t.cnt));
+  $('#main').innerHTML = `
+  <h2>📊 數據總覽</h2>
+  <div class="stats">
+    <div class="stat"><b>${L.length}</b><span class="sub">冒險者</span></div>
+    <div class="stat"><b>${L.filter(u=>u.week>0).length}</b><span class="sub">本週有練</span></div>
+    <div class="stat"><b>${OV.trend[7].cnt}</b><span class="sub">本週打卡</span></div>
+    <div class="stat"><b>${L.reduce((a,u)=>a+u.total,0)}</b><span class="sub">累計打卡</span></div>
+    <div class="stat"><b>${L.reduce((a,u)=>a+u.pets,0)}</b><span class="sub">生成寵物</span></div>
+    <div class="stat"><b>${OV.used}<span class="sub" style="font-size:14px"> / ${OV.quota}</span></b><span class="sub">本月生圖</span></div>
+  </div>
+  <div class="card">
+    <b>📈 近 8 週打卡次數</b><span class="sub">（括號是有練的人數）</span>
+    <div class="bar">${OV.trend.map(t=>`<div><em>${t.cnt}</em><i style="height:${Math.round(t.cnt/mx*110)+2}px"></i>${t.w.slice(5).replace('-','/')}<span>(${t.users})</span></div>`).join('')}</div>
+  </div>
+  <div class="card">
+    <div class="row" style="justify-content:space-between"><b>👥 冒險者</b>
+      <div class="row"><button class="s" id="csv">⬇️ 匯出 Excel（CSV）</button><a href="${esc(OV.sheet)}" target="_blank"><button class="s">開啟試算表</button></a><button class="s" id="rl">重新整理</button></div></div>
+    <div class="tw"><table style="margin-top:8px">
+      <thead><tr>${[['name','名稱'],['week','本週'],['total','累計'],['xp','⚡ 能量'],['pets','寵物'],['last','最後打卡'],['seen','最後上線'],['created','註冊']].map(([k,n])=>`<th data-s="${k}">${n}${SORT===k?' ▾':''}</th>`).join('')}<th></th></tr></thead>
+      <tbody>${L.length?L.map(u=>`<tr>
+        <td class="n">${esc(u.name)}<div class="sub">${esc(u.title)}</div></td>
+        <td>${u.week}</td><td>${u.total}</td><td>${u.xp.toLocaleString()}</td><td>${u.pets}</td>
+        <td class="sub">${esc(u.last)}</td><td class="sub">${esc(u.seen)}</td><td class="sub">${esc(u.created)}</td>
+        <td><div class="row" style="gap:4px;flex-wrap:nowrap"><button class="s" data-r="${esc(u.name)}">重設密碼</button><button class="s r" data-d="${esc(u.name)}">刪除</button></div></td></tr>`).join(''):'<tr><td colspan="9" class="sub">還沒有人註冊</td></tr>'}</tbody>
+    </table></div>
+    <p class="sub" style="margin-bottom:0">「重設密碼」會改成 0000，請對方登入後記住。「刪除」會清掉帳號和打卡紀錄（寵物圖保留在圖鑑）。</p>
+  </div>`;
+  document.querySelectorAll('[data-s]').forEach(th=>th.onclick=()=>{SORT=th.dataset.s;drawOv()});
+  $('#rl').onclick=()=>tab('ov');
+  $('#csv').onclick=()=>{
+    const rows=[['名稱','稱號','本週打卡','累計打卡','累計能量','寵物數','最後打卡','最後上線','註冊日']].concat(L.map(u=>[u.name,u.title,u.week,u.total,u.xp,u.pets,u.last,u.seen,u.created]));
+    const csv='﻿'+rows.map(r=>r.map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(',')).join('\r\n');
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='翹臀冒險_數據_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+  };
+  document.querySelectorAll('[data-r]').forEach(b=>b.onclick=async()=>{if(confirm('把「'+b.dataset.r+'」的密碼重設成 0000？'))toast(await api('adminResetPin',b.dataset.r))});
+  document.querySelectorAll('[data-d]').forEach(b=>b.onclick=async()=>{if(confirm('確定刪除「'+b.dataset.d+'」？打卡紀錄會消失，無法復原。')){toast(await api('adminDelete',b.dataset.d));tab('ov')}});
+}
+
+// ================= 寵物圖鑑 =================
+let PETS = [], PF = 'all';
+async function pets(){ PETS = await api('adminPets'); drawPets(); }
+function drawPets(){
+  const L = PETS.filter(p => PF==='all' || (PF==='hidden'?p.status==='hidden':p.attr===PF));
+  $('#main').innerHTML = `<h2>🐾 全員寵物圖鑑 <span class="sub">共 ${PETS.length} 隻</span></h2>
+  <div class="row">${[['all','全部'],['peach','🍑 翹臀系'],['red','💪 力量系'],['mint','🌊 柔軟系'],['butter','⚡ 耐力系'],['hidden','已下架']].map(([k,n])=>`<button class="s ${PF===k?'y':''}" data-f="${k}">${n}</button>`).join('')}</div>
+  <p class="sub">點圖可放大。「重生」會用 Gemini 重畫那個階段（算進本月生圖額度）；「下架」後玩家那邊會改回預設圖。</p>
+  <div class="grid">${L.length?L.map(p=>`<div class="pet ${p.status==='hidden'?'off':''}">
+    <div class="row" style="justify-content:space-between;flex-wrap:nowrap"><b style="font-size:16px">${esc(p.name)||'（未命名）'}</b><span class="sub">${esc(p.created)}</span></div>
+    <div><span class="tag" style="background:${(ATTR[p.attr]||[])[1]}">${(ATTR[p.attr]||[''])[0]}</span>${p.mut?'<span class="tag" style="background:var(--coral)">突變</span>':''}${p.gen>1?`<span class="tag">第 ${p.gen} 代</span>`:''}<span class="tag" style="background:#fff">${esc(p.style)}</span></div>
+    <div class="sub" style="margin-top:4px">主人：<b style="color:var(--ink)">${esc(p.owner)}</b>・${esc(p.proto)}</div>
+    <div class="st4">${Object.keys(STN).map(k=>`<div>${p.img[k]?`<img src="${esc(p.img[k])}" data-z="${esc(p.img[k])}" loading="lazy">`:'<span class="ph">？</span>'}${STN[k]}${p.img[k]?`<br><button class="s" data-g="${esc(p.key)}|${k}" style="margin-top:3px">重生</button>`:''}</div>`).join('')}</div>
+    <div class="sub" style="font-size:12px;max-height:54px;overflow:auto">${esc(p.pun)}</div>
+    <div class="row" style="margin-top:6px"><button class="s ${p.status==='hidden'?'m':''}" data-h="${esc(p.key)}">${p.status==='hidden'?'重新上架':'下架'}</button></div>
+  </div>`).join(''):'<p class="sub">還沒有寵物。玩家孵化後就會出現在這裡。</p>'}</div>`;
+  document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{PF=b.dataset.f;drawPets()});
+  document.querySelectorAll('[data-z]').forEach(i=>i.onclick=()=>zoom(i.dataset.z));
+  document.querySelectorAll('[data-g]').forEach(b=>b.onclick=async()=>{
+    const [key,st]=b.dataset.g.split('|');if(!confirm('用 Gemini 重新生成「'+STN[st]+'」這張圖？會用掉 1 張額度。'))return;
+    b.disabled=true;b.textContent='生成中…';
+    try{const u=await api('adminPetRegen',key,st);const p=PETS.find(x=>x.key===key);p.img[st]=u+'?v='+Date.now();toast('重新生成好了');drawPets()}catch(e){b.disabled=false;b.textContent='重生'}
+  });
+  document.querySelectorAll('[data-h]').forEach(b=>b.onclick=async()=>{
+    const p=PETS.find(x=>x.key===b.dataset.h);p.status=await api('adminPetStatus',p.key,p.status==='hidden'?'ok':'hidden');drawPets();
+  });
+}
+
+// ================= 動作圖 =================
+let EXO = {}, EXF = 'show', EXQ = '';
+async function ex(){
+  const r = await api('adminExGet'); EXO = r.ex || {}; SITE = r.site || '';
+  drawEx();
+}
+const isHidden = e => (EXO[e.id] && EXO[e.id].h !== undefined) ? !!EXO[e.id].h : !!e.hid;
+const exThumb = e => (EXO[e.id] && EXO[e.id].t) ? EXO[e.id].t : (SITE ? SITE.replace(/\/?$/,'/') + 'ex/' + e.id + '_t.webp' : '');
+function drawEx(){
+  const cats = [...new Set(EXLIST.map(e=>e.cat))];
+  const L = EXLIST.filter(e => (EXF==='all' || (EXF==='show'?!isHidden(e):EXF==='hide'?isHidden(e):EXF==='mine'?(EXO[e.id]&&EXO[e.id].u):e.cat===EXF)) && (!EXQ || e.n.includes(EXQ) || e.id.includes(EXQ)));
+  $('#main').innerHTML = `<h2>🏋️ 動作圖管理</h2>
+  ${SITE?'':'<div class="card" style="background:#FFF3D6">還沒填「前台網址」，所以看不到原本的插圖。到 ⚙️ 設定填上 GitHub Pages 網址就會顯示。</div>'}
+  <div class="row"><input id="q" placeholder="搜尋動作名稱" value="${esc(EXQ)}" style="flex:1;min-width:160px">
+    <select id="f">${[['show','前台顯示中'],['hide','已隱藏'],['mine','已換過圖'],['all','全部']].concat(cats.map(c=>[c,c])).map(([k,n])=>`<option value="${esc(k)}" ${EXF===k?'selected':''}>${esc(n)}</option>`).join('')}</select></div>
+  <p class="sub">共 ${L.length} 個。「換圖」上傳後前台馬上生效（玩家下次開網頁會看到）；建議用兩格流程圖、橫式 3:2，會自動縮小成 960px 和 320px 縮圖。</p>
+  <div class="ex">${L.map(e=>{const o=EXO[e.id]||{},h=isHidden(e),src=exThumb(e);return `<div class="exc ${h?'hid':''}">
+    ${src?`<img src="${esc(src)}" loading="lazy" data-z="${esc(o.u||(SITE?SITE.replace(/\/?$/,'/')+'ex/'+e.id+'.webp':src))}" onerror="this.style.visibility='hidden'">`:'<div style="aspect-ratio:1;background:#F7EFE6;border-radius:10px"></div>'}
+    <b>${esc(e.n)}</b><div class="sub">${esc(e.cat)}${o.u?' <span class="pill new">已換圖</span>':''}${h?' <span class="pill">隱藏</span>':''}</div>
+    <div class="row" style="gap:4px;margin-top:6px"><button class="s y" data-up="${e.id}">換圖</button><button class="s" data-hd="${e.id}">${h?'顯示':'隱藏'}</button>${o.u?`<button class="s" data-rs="${e.id}">還原</button>`:''}</div>
+  </div>`}).join('')}</div>
+  <input type="file" id="file" accept="image/*" style="display:none">`;
+  $('#q').oninput=e=>{EXQ=e.target.value;clearTimeout(window._qt);window._qt=setTimeout(()=>{drawEx();$('#q').focus();$('#q').setSelectionRange(EXQ.length,EXQ.length)},300)};
+  $('#f').onchange=e=>{EXF=e.target.value;drawEx()};
+  document.querySelectorAll('[data-z]').forEach(i=>i.onclick=()=>zoom(i.dataset.z));
+  document.querySelectorAll('[data-hd]').forEach(b=>b.onclick=async()=>{const e=EXLIST.find(x=>x.id===b.dataset.hd);EXO[e.id]=await api('adminExSet',e.id,!isHidden(e));toast(isHidden(e)?'已隱藏':'已顯示');drawEx()});
+  document.querySelectorAll('[data-rs]').forEach(b=>b.onclick=async()=>{if(!confirm('還原成原本的插圖？'))return;const r=await api('adminExReset',b.dataset.rs);if(r)EXO[b.dataset.rs]=r;else delete EXO[b.dataset.rs];drawEx()});
+  document.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>{const f=$('#file');f.value='';f.onchange=()=>upload(b.dataset.up,f.files[0],b);f.click()});
+}
+function loadImg(file){return new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=r.result};r.onerror=no;r.readAsDataURL(file)})}
+function canvasOut(c){const w=c.toDataURL('image/webp',0.82);return w.startsWith('data:image/webp')?w:c.toDataURL('image/jpeg',0.85)}
+async function upload(id,file,btn){
+  if(!file)return;
+  btn.disabled=true;btn.textContent='上傳中…';
+  try{
+    const im=await loadImg(file);
+    const s=Math.min(1,960/im.width);const c=document.createElement('canvas');c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);
+    c.getContext('2d').drawImage(im,0,0,c.width,c.height);const big=canvasOut(c);
+    const t=document.createElement('canvas');t.width=t.height=320;const g=t.getContext('2d');g.fillStyle='#F7EFE6';g.fillRect(0,0,320,320);
+    const k=Math.min(320/im.width,320/im.height);const w=im.width*k,h=im.height*k;g.drawImage(im,(320-w)/2,(320-h)/2,w,h);const th=canvasOut(t);
+    const mime=big.slice(5,big.indexOf(';'));
+    EXO[id]=await api('adminExUpload',id,big.split(',')[1],th.split(',')[1],mime);toast('換好了！');drawEx();
+  }catch(e){btn.disabled=false;btn.textContent='換圖'}
+}
+
+// ================= 設定 =================
+async function set(){
+  const s = await api('adminSettings'); SITE = s.site;
+  const pct = s.quota ? Math.min(100, Math.round(s.used / s.quota * 100)) : 100;
+  $('#main').innerHTML = `<h2>⚙️ 設定</h2>
+  <div class="card">
+    <b>🎨 每月生圖上限</b>
+    <div class="row" style="margin:10px 0"><div class="quota" style="flex:1"><i style="width:${pct}%;background:${pct>=90?'var(--coral)':'var(--mint)'}"></i></div><b>${s.used} / ${s.quota}</b></div>
+    <p class="sub">每隻寵物最多 4 張（幼年、青年、壯年、老年），每張約 US$0.04。到上限後寵物還是會孵化，只是先用預設圖，下個月 1 號自動恢復，玩家下次打卡會補畫。</p>
+    <label class="f">每月最多幾張</label><div class="row"><input id="quota" type="number" min="0" value="${s.quota}" style="width:140px"><span class="sub">≈ 每月最多 US$${(s.quota*0.04).toFixed(1)}</span></div>
+  </div>
+  <div class="card">
+    <b>🤖 Gemini</b>
+    <p class="sub">金鑰狀態：${s.hasKey?'✅ 已設定（在指令碼屬性 GEMINI_KEY）':'❌ 還沒設定：到 Apps Script「專案設定 → 指令碼屬性」新增 GEMINI_KEY'}</p>
+    <label class="f">文字模型</label><input id="tm" value="${esc(s.textModel)}" style="width:100%">
+    <label class="f">生圖模型</label><input id="im" value="${esc(s.imgModel)}" style="width:100%">
+    <p class="sub">Google 換新模型時，把名稱改成新的就好（例如 gemini-3.1-flash-image-preview）。</p>
+    <button id="test" ${s.hasKey?'':'disabled'}>測試金鑰</button> <span id="tres" class="sub"></span>
+  </div>
+  <div class="card">
+    <b>🌐 前台網址</b>
+    <label class="f">GitHub Pages 網址</label><input id="site" value="${esc(s.site)}" placeholder="https://你的帳號.github.io/qiaotun/" style="width:100%">
+    <p class="sub">用來在「動作圖」顯示原本的插圖。</p>
+  </div>
+  <button class="y" id="save" style="width:100%;padding:12px">儲存設定</button>`;
+  $('#test').onclick=async()=>{$('#tres').textContent='測試中…';try{$('#tres').textContent='✅ '+await api('adminTestKey')}catch(e){$('#tres').textContent='❌ '+(e.message||e)}};
+  $('#save').onclick=async()=>{await api('adminSaveSettings',{quota:$('#quota').value,textModel:$('#tm').value,imgModel:$('#im').value,site:$('#site').value});toast('已儲存');set()};
+}
+
+if (TOK) { show(true); tab('ov'); }
+</script>
+</body>
+</html>

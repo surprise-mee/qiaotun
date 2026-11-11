@@ -88,17 +88,18 @@ let TOK = SS.get('qta_adm') || '', TAB = 'ov', SITE = '';
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(t){const m=$('#msg');m.textContent=t;m.style.display='block';clearTimeout(m._t);m._t=setTimeout(()=>m.style.display='none',3000)}
-function run(fn, ...a){
-  return new Promise((ok, no) => {
-   if (!window.google || !google.script || !google.script.run) { toast('請用 Apps Script 部署網址開啟這個頁面'); return no(new Error('no gas')); }
-   const r = google.script.run.withSuccessHandler(ok).withFailureHandler(e => {
-    const msg = (e && e.message) || String(e); toast(msg);
-    if (/重新登入/.test(msg)) { TOK=''; SS.del('qta_adm'); show(false); }
-    no(e);
-  });
-   if (typeof r[fn] !== 'function') { toast('後台找不到「' + fn + '」：請確認 Code.gs 是最新版，並重新部署成「新版本」'); return no(new Error('missing ' + fn)); }
-   r[fn](...a);
-  });
+const API = "https://script.google.com/macros/s/AKfycbyU2xukAW94ltDwxCchZQ9-YY5vF2B0ufNONRHWC_g4OIN_8ZO21mZW0zAojRSmLCAZ/exec";
+async function run(fn, ...a){
+  let j;
+  try {
+    const r = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ a: 'admin', fn: fn, args: a }) });
+    j = await r.json();
+  } catch (e) { toast('連不上後台，請確認網路或 Apps Script 部署'); throw e; }
+  if (j.ok) return j.v;
+  const msg = j.err || '發生錯誤';
+  toast(/未知的/.test(msg) ? '後台還是舊版：請把 Code.gs 換成最新版，並重新部署成「新版本」' : msg);
+  if (/重新登入/.test(msg)) { TOK=''; SS.del('qta_adm'); show(false); }
+  throw new Error(msg);
 }
 const api = (fn, ...a) => run(fn, TOK, ...a);
 function show(on){$('#login').style.display=on?'none':'block';$('#app').style.display=on?'block':'none';$('#logout').style.display=on?'inline-block':'none'}

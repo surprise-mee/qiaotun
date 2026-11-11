@@ -45,6 +45,7 @@ function doPost(e) {
       case 'board':    return out_(auth_(r, board_));
       case 'clap':     return out_(auth_(r, clap_));
       case 'petgen':   return out_(auth_(r, petgen_));
+      case 'admin':    return out_(adminCall_(r));
       default:         return out_({ ok: false, err: '未知的動作' });
     }
   } catch (err) {
@@ -301,7 +302,15 @@ function urls_(img) {
   return o;
 }
 
-// ================= 管理後台（Admin.html 透過 google.script.run 呼叫） =================
+// ================= 管理後台（Admin.html 用 fetch 呼叫 doPost，a:'admin'） =================
+const ADMIN_FNS = { adminLogin: adminLogin, adminOverview: adminOverview, adminPets: adminPets, adminPetRegen: adminPetRegen, adminPetStatus: adminPetStatus,
+  adminExGet: adminExGet, adminExUpload: adminExUpload, adminExSet: adminExSet, adminExReset: adminExReset,
+  adminSettings: adminSettings, adminSaveSettings: adminSaveSettings, adminTestKey: adminTestKey, adminResetPin: adminResetPin, adminDelete: adminDelete };
+function adminCall_(r) {
+  const f = ADMIN_FNS[r.fn];
+  if (!f) return { ok: false, err: '未知的管理功能' };
+  try { return { ok: true, v: f.apply(null, r.args || []) }; } catch (e) { return { ok: false, err: String(e.message || e) }; }
+}
 function adminLogin(pass) {
   const c = CacheService.getScriptCache(), fails = Number(c.get('adm_fail') || 0);
   if (fails >= 5) throw new Error('密碼錯太多次，請 10 分鐘後再試');
