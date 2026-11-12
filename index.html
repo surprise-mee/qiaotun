@@ -704,6 +704,8 @@ function titleSheet(){
   <button class="btn main" onclick="closeSheet()">繼續冒險</button>`);
  document.querySelectorAll('[data-ts]').forEach(b=>b.onclick=()=>{S.titleSel=S.titleSel===b.dataset.ts?null:b.dataset.ts;save();titleSheet();if($('#hud'))tab('map')});
 }
+// 老年寵物每陪練幾次再送一顆傳承蛋
+const ELDER_EVERY=8;
 // 打卡時結算寵物（劇情、進化）
 function petCheck(){
  const p=curPet();if(!p)return null;
@@ -711,11 +713,14 @@ function petCheck(){
  const ev={id:p.id,before,after,line:'',story:''};
  if(after>=2&&!p.pid)hatchPet(p);
  if(after===5&&before<5)ev.story=PD(p).old;
+ else if(before===5&&p.done){p.eld=(p.eld||0)+1;
+   if(p.eld%ELDER_EVERY===0){S.pets.basket.push({attr:p.attr,parent:p.id,e:0});ev.line=`牠又慢慢捧出一顆傳承蛋，交到你手上……🥚 已放進蛋籃！`;ev.egg=1}
+   else ev.line=pick(PD(p).lines)+`（再陪 ${ELDER_EVERY-p.eld%ELDER_EVERY} 次，牠會再送你一顆傳承蛋）`}
  else if(after>=2){if((p.sn||0)<12){p.sn=(p.sn||0)+1;ev.story=PD(p).story[p.sn-1];ev.no=p.sn}else ev.line=pick(PD(p).lines)}
  else if(after===1)ev.line=CRACK_LINE;
  else ev.line=pick(EGG_LINES);
  p.si=after;p.cnt=(p.cnt||0)+1;
- if(after===5&&before<5){p.done=1;S.pets.basket.push({attr:p.attr,parent:p.id,e:0});S.pets.cur=null}
+ if(after===5&&before<5){p.done=1;p.eld=0;S.pets.basket.push({attr:p.attr,parent:p.id,e:0})}
  save();return ev;
 }
 // 打卡後的寵物互動畫面
@@ -777,8 +782,10 @@ function petAfter(ev,done){
   }else if(PST[ev.after].k==='old'){
    sheet(`<div style="text-align:center">${petPic(p,'old','width:150px;border-radius:24px;border:2px solid var(--line)')}<h2 style="margin:8px 0 4px">🏅 終身夥伴</h2><p style="text-align:left">${PD(p).old}</p>
     <div class="row" style="justify-content:center;gap:8px;margin:6px 0"><img src="${IMG['egg_'+p.attr]}" style="width:64px"><div style="text-align:left"><b>獲得：傳承蛋</b><div class="sub">已放進蛋籃，想孵的時候再孵</div></div></div></div>
-    <button class="btn main" id="pgo">去蛋籃看看</button>`,true);
-   $('#pgo').onclick=()=>{closeSheet();viewEggs()};
+    <div class="row"><button class="btn" style="flex:1" id="pgo">去孵傳承蛋</button><button class="btn main" style="flex:1" id="pstay">繼續陪我練</button></div>
+    <p class="sub" style="text-align:center;margin-top:8px">繼續陪練的話，牠每陪你運動 ${ELDER_EVERY} 次，就會再送你一顆傳承蛋（下一代）。<br>想孵的時候，到圖鑑的蛋籃挑一顆就好。</p>`,true);
+   $('#pgo').onclick=()=>{p.retired=1;S.pets.cur=null;save();closeSheet();viewEggs()};
+   $('#pstay').onclick=()=>{closeSheet();done()};
   }else done();
  });
 }
@@ -792,7 +799,7 @@ function parkCur(){const c=curPet();if(!c)return;
 function eggFromBasket(i){const b=S.pets.basket.splice(i,1)[0];const par=b.parent&&petById(b.parent);
  const p={id:b.id||('p'+Date.now()),attr:b.attr,col:b.col||b.attr,e:b.e||0,si:0,sn:b.sn||0,cnt:0,gen:b.gen||1,born:b.born||today()};
  if(b.g)p.g=b.g;
- if(par){Object.assign(p,{parent:par.id,gen:(par.gen||1)+1});if(b.mut!==undefined){if(b.mut){p.mut=1;p.col=b.col}}else if(Math.random()<0.5){p.mut=1;p.col=pick(Object.keys(ATTR).filter(k=>k!==b.attr))}}
+ if(par){Object.assign(p,{parent:par.id,gen:(par.gen||1)+1});if(b.mut!==undefined){if(b.mut){p.mut=1;p.col=b.col}}else if(Math.random()<(LIVE?0.1:0.5)){p.mut=1;p.col=pick(Object.keys(ATTR).filter(k=>k!==b.attr))}}
  else if(b.mut){p.mut=1;p.col=b.col}
  p.si=Math.min(1,stIdx(p.e));
  S.pets.list.push(p);S.pets.cur=p.id;return p}
@@ -839,7 +846,7 @@ function petSheet(){
    <details style="margin:8px 0"><summary style="font-weight:700;cursor:pointer">📖 冒險劇情（${nStory}/12）</summary>${P.story.slice(0,nStory).map((t,i)=>`<p style="font-size:14px;margin:6px 0"><b>${i+1}.</b> ${t}</p>`).join('')}</details>`:
    `<p class="sub" style="text-align:center;margin-top:10px">${(p.si||0)>=1?CRACK_LINE:'蛋裡會孵出什麼？要孵了才知道！'}</p>`}
   ${(p.si||0)<2?`<div class="row" style="margin-top:10px"><button class="btn" style="flex:1" id="pswap">換屬性（能量保留）</button><button class="btn" style="flex:1" id="pbasket">放進蛋籃</button></div>`:
-   `<div class="row" style="margin-top:10px"><button class="btn coral" style="flex:1" id="pfoster">送去寄養</button><button class="btn" style="flex:1" id="pretire">保存到圖鑑</button></div>`}
+   `${p.done?`<p class="sub" style="text-align:center;margin:10px 0 0">🥚 再陪 ${ELDER_EVERY-(p.eld||0)%ELDER_EVERY} 次，牠會再送你一顆傳承蛋</p>`:''}<div class="row" style="margin-top:10px">${p.done?'':'<button class="btn coral" style="flex:1" id="pfoster">送去寄養</button>'}<button class="btn" style="flex:1" id="pretire">保存到圖鑑</button></div>`}
   <button class="btn main" style="width:100%;margin-top:8px" onclick="closeSheet()">繼續冒險</button>
   <div class="card demo-only" style="background:var(--lavL);margin-top:12px;padding:10px"><b style="font-size:13px">🧪 Demo 控制</b><div class="row" style="margin-top:6px"><button class="btn sm" style="flex:1" id="pff">⏩ 模擬運動 1 次</button><button class="btn sm" style="flex:1" id="pff5">⏩ 快轉到下一階段</button></div></div>`);
  const sw=$('#pswap');if(sw)sw.onclick=()=>{closeSheet();viewEggs({swap:1,back:1})};
@@ -898,7 +905,7 @@ function dexDetail(id){
   <div style="text-align:center;margin-top:10px"><div class="bigpet" style="background:${ATTR[p.col].c}33">${petPic(p)}</div>
    <h1 style="margin-top:8px">${P.name}</h1><div class="sub">${P.style}・${P.proto}${p.gen>1?'・第 '+p.gen+' 代':''}${p.mut?'・<b style="color:var(--coral)">突變（'+ATTR[p.col].n+'色）</b>':''}</div>
    <div style="margin-top:6px"><span class="atag" style="background:${ATTR[p.attr].c};font-size:13px">${ATTR[p.attr].i} ${ATTR[p.attr].n}</span> ${p.done?'<span class="atag" style="background:#FFE08A;font-size:13px">🏅 終身夥伴</span>':p.id===S.pets.cur?'<span class="atag" style="background:var(--butter);font-size:13px">陪練中</span>':''}</div>
-   ${!p.done&&p.id!==S.pets.cur?`<button class="btn main" id="resume" style="margin-top:10px">💪 叫牠回來繼續陪練</button>`:''}
+   ${p.id!==S.pets.cur?`<button class="btn main" id="resume" style="margin-top:10px">💪 叫牠回來繼續陪練</button>${p.done?`<div class="sub" style="margin-top:4px">終身夥伴每陪你運動 ${ELDER_EVERY} 次，會再送你一顆傳承蛋</div>`:''}`:''}
    ${!p.done?`<button class="btn sm coral" id="dfoster" style="margin-top:8px">送去寄養</button>`:''}</div>
   <h3 style="margin:16px 0 6px">成長紀錄</h3>
   <div class="stages">${['baby','teen','adult','old'].map((k,i)=>{const ok=reach>=i+2;return `<div class="${ok?'':'stlock'}">${ok?petPic(p,k):'<div class="q">？</div>'}<div class="sub" style="font-size:11px">${ok||k!=='old'?PST[i+2].n:'？？？'}</div></div>`}).join('')}</div>
