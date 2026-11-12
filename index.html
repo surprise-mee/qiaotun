@@ -782,6 +782,20 @@ function petAfter(ev,done){
   }else done();
  });
 }
+// ===== 換寵物／換蛋 =====
+// 把目前陪練的放旁邊：還沒孵出來的蛋進蛋籃（能量、編號、已生成的資料都保留），孵出來的去休息
+function parkCur(){const c=curPet();if(!c)return;
+ if(!c.pid||c.si<2){S.pets.basket.push({attr:c.attr,e:c.e||0,parent:c.parent,mut:c.mut||0,col:c.col,id:c.id,g:c.g,born:c.born,gen:c.gen,sn:c.sn||0});S.pets.list=S.pets.list.filter(x=>x.id!==c.id)}
+ else c.retired=1;
+ S.pets.cur=null}
+// 從蛋籃拿一顆出來孵
+function eggFromBasket(i){const b=S.pets.basket.splice(i,1)[0];const par=b.parent&&petById(b.parent);
+ const p={id:b.id||('p'+Date.now()),attr:b.attr,col:b.col||b.attr,e:b.e||0,si:0,sn:b.sn||0,cnt:0,gen:b.gen||1,born:b.born||today()};
+ if(b.g)p.g=b.g;
+ if(par){Object.assign(p,{parent:par.id,gen:(par.gen||1)+1});if(b.mut!==undefined){if(b.mut){p.mut=1;p.col=b.col}}else if(Math.random()<0.5){p.mut=1;p.col=pick(Object.keys(ATTR).filter(k=>k!==b.attr))}}
+ else if(b.mut){p.mut=1;p.col=b.col}
+ p.si=Math.min(1,stIdx(p.e));
+ S.pets.list.push(p);S.pets.cur=p.id;return p}
 // ===== 選蛋 =====
 function viewEggs(opt){
  opt=opt||{};let sel=null;
@@ -802,11 +816,9 @@ function viewEggs(opt){
   const ok=$('#eok');if(sel)ok.onclick=choose;
  };
  const choose=()=>{
-  if(opt.swap&&cur){cur.attr=sel;cur.col=sel;save();toast('換成'+ATTR[sel].n+'蛋了！');return tab('map')}
-  const p={id:'p'+Date.now(),attr:'peach',col:'peach',e:opt.carry||0,si:0,sn:0,cnt:0,gen:1,born:today()};
-  if(sel[0]==='b'){const b=S.pets.basket.splice(+sel.slice(1),1)[0];const par=b.parent&&petById(b.parent);Object.assign(p,{attr:b.attr,col:b.attr,e:b.e||p.e});
-   if(par){Object.assign(p,{parent:par.id,gen:(par.gen||1)+1});if(b.mut!==undefined){if(b.mut){p.mut=1;p.col=b.col}}else if(Math.random()<0.5){p.mut=1;p.col=pick(Object.keys(ATTR).filter(k=>k!==b.attr))}}}
-  else{p.attr=sel;p.col=sel}
+  if(opt.swap&&cur){cur.attr=sel;cur.col=sel;cur.id='p'+Date.now();S.pets.cur=cur.id;delete cur.g;save();toast('換成'+ATTR[sel].n+'蛋了！');return tab('map')}
+  if(sel[0]==='b'){const p=eggFromBasket(+sel.slice(1));if(opt.carry&&!p.e){p.e=opt.carry;p.si=Math.min(1,stIdx(p.e))}save();burst('🥚 開始孵化！');setTimeout(()=>tab('map'),600);return}
+  const p={id:'p'+Date.now(),attr:sel,col:sel,e:opt.carry||0,si:0,sn:0,cnt:0,gen:1,born:today()};
   p.si=Math.min(1,stIdx(p.e));
   S.pets.list.push(p);S.pets.cur=p.id;save();
   burst('🥚 開始孵化！');setTimeout(()=>tab('map'),600);
@@ -849,6 +861,8 @@ function viewDex(){
   app.innerHTML=`<div class="screen">
    <h1>📖 寵物圖鑑</h1><p class="sub">已收集 ${all.length} 隻・稱號 <b id="dtt" style="text-decoration:underline dotted;cursor:pointer">${T.title}</b>・蛋籃 ${S.pets.basket.length} 顆</p>
    <div class="chips" style="margin:10px 0">${[['all','全部'],...Object.entries(ATTR).map(([k,a])=>[k,a.i+' '+a.n])].map(([k,n])=>`<button class="chip ${f===k?'on':''}" data-f="${k}">${n}</button>`).join('')}</div>
+   ${(()=>{const c=curPet();return `<div class="card" style="display:flex;gap:10px;align-items:center;padding:10px 12px;margin:0 0 10px">${c?petPic(c,null,'width:52px;height:52px;border-radius:12px;border:2px solid var(--line);object-fit:contain;background:#fff'):''}<div style="flex:1;min-width:0"><b>${c?'正在陪練：'+(c.pid&&c.si>=2?petName(c):ATTR[c.attr].n+'蛋'):'目前沒有陪練的寵物'}</b><div class="sub" style="font-size:12px">${c?`已累積 ${(c.e||0).toLocaleString()} ⚡・`:''}想換誰陪練，點下面的寵物或蛋籃裡的蛋</div></div></div>`})()}
+   ${S.pets.basket.length?`<h3 style="margin:4px 0 6px">🧺 蛋籃（孵到一半的蛋）</h3><div class="eggs" style="margin-bottom:12px">${S.pets.basket.map((b,i)=>{const par=b.parent&&petById(b.parent);const legacy=par&&par.done&&!b.e;return `<button class="egg" data-b="${i}"><img src="${IMG['egg_'+b.attr+((b.e||0)>=1000?'_c':'')]}"><b>${legacy?'傳承蛋':ATTR[b.attr].n+'蛋'}</b><div class="sub" style="font-size:11px">${(b.e||0).toLocaleString()} ⚡</div></button>`}).join('')}</div>`:''}
    <div class="dex">${list.map(p=>{const P=PD(p);const fam=famChain(p).length>1;const tags=[p.id===S.pets.cur?'<span class="tg lt" style="background:var(--butter)">陪練中</span>':(!p.done?'<span class="tg">休息中</span>':''),p.done?'<span class="tg lt" style="background:#FFE08A">🏅終身夥伴</span>':'',fam?'<span class="tg lt" style="background:#C0DD97">🌳家族</span>':'',p.gen>1?`<span class="tg">第${p.gen}代</span>`:'',p.mut?'<span class="tg lt" style="background:#CECBF6">突變</span>':''].join('');
      return `<button class="dx" data-id="${p.id}"><div class="tgs">${tags}</div>${petPic(p)}<b>${P.name}</b><div><span class="atag" style="background:${ATTR[p.attr].c}">${ATTR[p.attr].i} ${ATTR[p.attr].n}</span> <span class="sub" style="font-size:11px">${PST[p.si].n}</span></div></button>`}).join('')}
     ${missing.map(k=>`<div class="dx unk"><img src="${IMG['egg_'+k]}" style="filter:grayscale(1) brightness(.6);opacity:.35"><b>？？？</b><div class="sub" style="font-size:11px">${ATTR[k].n}・尚未孵化</div></div>`).join('')}</div>
@@ -857,6 +871,10 @@ function viewDex(){
   $('#dtt').onclick=titleSheet;
   app.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{f=window._df=b.dataset.f;draw()});
   app.querySelectorAll('.dx[data-id]').forEach(b=>b.onclick=()=>dexDetail(b.dataset.id));
+  app.querySelectorAll('[data-b]').forEach(el=>el.onclick=()=>{const i=+el.dataset.b,b=S.pets.basket[i],c=curPet();
+   const go=()=>{parkCur();const j=S.pets.basket.indexOf(b);eggFromBasket(j);save();closeSheet();burst('🥚 換這顆來孵！');setTimeout(()=>tab('map'),600)};
+   if(!c)return go();
+   sheet(`<div style="text-align:center"><img src="${IMG['egg_'+b.attr+((b.e||0)>=1000?'_c':'')]}" style="width:110px"><h2 style="margin-top:8px">換這顆${ATTR[b.attr].n}蛋來孵？</h2><p class="sub">這顆蛋已累積 ${(b.e||0).toLocaleString()} ⚡，之後的能量都會給牠。<br>${!c.pid||c.si<2?`目前在孵的${ATTR[c.attr].n}蛋會放進蛋籃，能量（${(c.e||0).toLocaleString()} ⚡）保留。`:`${petName(c)} 會先去休息，隨時可以從圖鑑叫回來。`}</p></div><div class="row"><button class="btn" style="flex:1" onclick="closeSheet()">再想想</button><button class="btn main" style="flex:1" id="by">換牠來孵</button></div>`,true);$('#by').onclick=go});
   const g=$('#dgo');if(g)g.onclick=()=>viewEggs({back:1});
  };draw();
 }
@@ -882,7 +900,7 @@ function dexDetail(id){
  </div>`;
  $('#dback').onclick=()=>tab('dex');
  const rs=$('#resume');if(rs)rs.onclick=()=>{const c=curPet();
-  const go=()=>{if(c){if(!c.pid||c.si<2){S.pets.basket.push({attr:c.attr,e:c.e,parent:c.parent,mut:c.mut||0,col:c.col});S.pets.list=S.pets.list.filter(x=>x.id!==c.id)}else c.retired=1}p.retired=0;S.pets.cur=p.id;save();closeSheet();burst('💪 '+P.name+' 回來了！');setTimeout(()=>tab('map'),700)};
+  const go=()=>{parkCur();p.retired=0;S.pets.cur=p.id;save();closeSheet();burst('💪 '+P.name+' 回來了！');setTimeout(()=>tab('map'),700)};
   if(!c)return go();
   sheet(`<div style="text-align:center">${petPic(p,null,'width:120px;border-radius:20px;border:2px solid var(--line)')}<h2 style="margin-top:8px">叫 ${P.name} 回來陪練？</h2><p class="sub">${!c.pid||c.si<2?`目前在孵的${ATTR[c.attr].n}蛋會先放進蛋籃，能量（${c.e.toLocaleString()} ⚡）會保留。`:`目前的 ${petName(c)} 會先去休息，之後也可以從圖鑑叫回來。`}</p></div><div class="row"><button class="btn" style="flex:1" onclick="closeSheet()">再想想</button><button class="btn main" style="flex:1" id="ry">叫牠回來</button></div>`,true);$('#ry').onclick=go};
  app.querySelectorAll('.fm').forEach(b=>b.onclick=()=>{if(b.dataset.id!==id){dexDetail(b.dataset.id);window.scrollTo(0,0)}});
