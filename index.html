@@ -134,7 +134,7 @@ nav button.center.on{color:var(--ink)}
 .flame{background:var(--butter);}
 .vil{filter:brightness(2.2) saturate(.6)}
 .cal .x{color:var(--onc)}
-.cover{border-radius:20px;border:2px solid var(--line)}
+.cover{border:none;border-radius:0}
 .mon .pic img,.hero img{filter:brightness(.92)}
 }
 .week{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin:0 0 12px;text-align:center}
@@ -246,6 +246,8 @@ nav button.center.on{color:var(--ink)}
 <script>
 const IMG = JSON.parse(document.getElementById('imgdata').textContent);
 const IMG0 = Object.assign({}, IMG);
+let IMGSZ={};try{IMGSZ=JSON.parse(localStorage.getItem('qta_cfg')||'{}').sz||{}}catch(e){}
+const SZ=k=>(IMGSZ[k]||100)/100;
 function applyImg(m){const old={};Object.keys(IMG0).forEach(k=>{const v=(m&&m[k])||IMG0[k];if(IMG[k]!==v){old[IMG[k]]=v;IMG[k]=v}});return old}
 try{applyImg(JSON.parse(localStorage.getItem('qta_cfg')||'{}').img)}catch(e){}
 const BOOK = JSON.parse(document.getElementById('bookdata').textContent); // 個人版才有：書本動作圖
@@ -917,7 +919,7 @@ function cloudSum(){const cp=curPet();return{coach:S.settings.coach,t:titleInfo(
 let _push=null,_pushing=false;
 function cloudPush(now){if(!LIVE||!S.auth)return;clearTimeout(_push);_push=setTimeout(async()=>{if(!S.auth)return;if(_pushing)return cloudPush();_pushing=true;try{const j=await api('save',Object.assign(authBody(),{data:cloudData(),summary:cloudSum()}));if(!j.ok&&j.err)console.warn(j.err)}catch(e){}finally{_pushing=false}},now?0:2500)}
 // 動作圖設定（後台換圖／隱藏）
-async function loadCfg(){if(!LIVE)return;try{const j=await api('config');if(j.ok){const old=localStorage.getItem('qta_cfg');const nw=JSON.stringify({ex:j.ex,img:j.img||{},v:j.v});if(old!==nw){localStorage.setItem('qta_cfg',nw);OVR=j.ex||{};applyHide();const ch=applyImg(j.img||{});document.querySelectorAll('img').forEach(i=>{const a=i.getAttribute('src');if(ch[a])i.src=ch[a]})}}}catch(e){}}
+async function loadCfg(){if(!LIVE)return;try{const j=await api('config');if(j.ok){const old=localStorage.getItem('qta_cfg');const nw=JSON.stringify({ex:j.ex,img:j.img||{},sz:j.sz||{},v:j.v});IMGSZ=j.sz||{};if(old!==nw){localStorage.setItem('qta_cfg',nw);OVR=j.ex||{};applyHide();const ch=applyImg(j.img||{});document.querySelectorAll('img').forEach(i=>{const a=i.getAttribute('src');if(ch[a])i.src=ch[a]})}}}catch(e){}}
 // Gemini 寵物：孵化或進化前，先請後台生成這一階段的圖
 // 打卡後在背景先畫好「下一個階段」，下次孵化／進化就不用等
 let _pre=null;
@@ -1033,7 +1035,7 @@ function viewLogin(){
  $('#nav').classList.add('hidden');
  let pin='',mode='login';
  const draw=()=>{app.innerHTML=`<div class="screen">
-  <div style="text-align:center;margin:-6px 0 0"><img decoding="async" src="${IMG.cover}" alt="翹臀大冒險" class="cover" style="width:78%;max-height:24vh;object-fit:contain;display:inline-block"></div>
+  <div style="text-align:center;margin:-6px 0 0"><img decoding="async" src="${IMG.cover}" alt="翹臀大冒險" class="cover" style="width:${Math.min(100,78*SZ("cover"))}%;max-height:${24*SZ("cover")}vh;object-fit:contain;display:inline-block"></div>
   <p class="sub" style="text-align:center;margin-top:-4px">每練一次，寵物就長大一點</p>
   <div class="card">
    <div class="row" style="margin-bottom:10px"><button class="btn sm ${mode=='login'?'butter':''}" id="mL" style="flex:1">登入</button><button class="btn sm ${mode=='reg'?'butter':''}" id="mR" style="flex:1">註冊新冒險者</button></div>

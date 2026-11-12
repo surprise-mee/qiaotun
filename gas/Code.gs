@@ -124,7 +124,7 @@ function clap_(name, r) {
 
 // ================= 前台設定（動作圖覆寫） =================
 function publicConfig_() {
-  return { ok: true, ex: json_(cfg_('EX'), {}), img: json_(cfg_('IMG'), {}), v: (cfg_('EX_V') || '0') + '.' + (cfg_('IMG_V') || '0') };
+  return { ok: true, ex: json_(cfg_('EX'), {}), img: json_(cfg_('IMG'), {}), sz: json_(cfg_('IMG_SZ'), {}), v: (cfg_('EX_V') || '0') + '.' + (cfg_('IMG_V') || '0') };
 }
 
 // ================= Gemini 寵物 =================
@@ -313,7 +313,7 @@ function urls_(img) {
 // ================= 管理後台（Admin.html 用 fetch 呼叫 doPost，a:'admin'） =================
 const ADMIN_FNS = { adminLogin: adminLogin, adminOverview: adminOverview, adminPets: adminPets, adminPetRegen: adminPetRegen, adminPetStatus: adminPetStatus,
   adminExGet: adminExGet, adminExUpload: adminExUpload, adminExSet: adminExSet, adminExReset: adminExReset,
-  adminImgGet: adminImgGet, adminImgUpload: adminImgUpload, adminImgReset: adminImgReset,
+  adminImgGet: adminImgGet, adminImgUpload: adminImgUpload, adminImgReset: adminImgReset, adminImgSize: adminImgSize,
   adminSettings: adminSettings, adminSaveSettings: adminSaveSettings, adminTestKey: adminTestKey, adminResetPin: adminResetPin, adminDelete: adminDelete };
 function adminCall_(r) {
   const f = ADMIN_FNS[r.fn];
@@ -401,7 +401,7 @@ function adminExReset(tok, id) {
   return ex[id] || null;
 }
 // ---- 固定素材（封面、教練、蛋、預設寵物、伸展圖…）----
-function adminImgGet(tok) { adm_(tok); return { img: json_(cfg_('IMG'), {}), files: json_(cfg_('IMG_F'), {}), site: cfg_('SITE_URL') || '' }; }
+function adminImgGet(tok) { adm_(tok); return { img: json_(cfg_('IMG'), {}), sz: json_(cfg_('IMG_SZ'), {}), files: json_(cfg_('IMG_F'), {}), site: cfg_('SITE_URL') || '' }; }
 function adminImgUpload(tok, key, b64, mime) {
   adm_(tok);
   if (!/^[a-z0-9_]+$/i.test(key)) throw new Error('素材名稱不對');
@@ -412,6 +412,13 @@ function adminImgUpload(tok, key, b64, mime) {
   files[key] = f.getId(); img[key] = 'https://lh3.googleusercontent.com/d/' + f.getId();
   setCfg_('IMG', JSON.stringify(img)); setCfg_('IMG_F', JSON.stringify(files)); setCfg_('IMG_V', String(Date.now()));
   return img[key];
+}
+function adminImgSize(tok, key, pct) {
+  adm_(tok);
+  const sz = json_(cfg_('IMG_SZ'), {}); pct = Math.max(30, Math.min(200, Math.round(Number(pct) || 100)));
+  if (pct === 100) delete sz[key]; else sz[key] = pct;
+  setCfg_('IMG_SZ', JSON.stringify(sz)); setCfg_('IMG_V', String(Date.now()));
+  return pct;
 }
 function adminImgReset(tok, key) {
   adm_(tok);
